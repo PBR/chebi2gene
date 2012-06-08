@@ -224,7 +224,7 @@ def index():
     templates directory. The file is full html and has no templating
     logic within.
     """
-    stream = open('logs', 'a')
+    stream = open('/tmp/chebi2gene', 'a')
     stream.write('%s -- %s -- %s\n' % (datetime.datetime.now(),
         request.remote_addr, request.url))
     stream.close()
@@ -241,7 +241,7 @@ def show_chebi(chebi_id = '17579'):
     templates directory. The file is full html and has no templating
     logic within.
     """
-    stream = open('logs', 'a')
+    stream = open('/tmp/chebi2gene', 'a')
     stream.write('%s -- %s -- %s\n' % (datetime.datetime.now(),
         request.remote_addr, request.url))
     stream.close()
