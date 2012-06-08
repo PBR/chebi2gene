@@ -22,30 +22,72 @@
             <a href="http://www.ebi.ac.uk/chebi/searchId.do?chebiId={{ chebi }}">Chebi {{ chebi }} page</a>
         </p>
     {% for reactions in data %}
-        <p>Reaction: {{ reactions }}
-            <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:"></a>
+        <p>Reaction:
+            <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:{{ reactions }}">
+                {{ reactions }}
+            </a>
         </p>
         {% set reactionloop = loop %}
         {% if 'pathway' in data[reactions] %}
             {% for proteins in data[reactions]['pathway'] %}
-                <p style="text-indent:50px;">Protein: {{ proteins }}</p>
+                <p style="text-indent:50px;">Protein:
+                    <a href="http://purl.uniprot.org/uniprot/{{ proteins }}">{{ proteins }}</a>
+                </p>
                 {% for pathways in data[reactions]['pathway'][proteins] %}
                     <p style="text-indent:100px;">
-                        Pathway: {{ pathways }}
+                        <span style="color:#0489B1">Pathway:</span>
+                         {{ pathways }}
                     </p>
                 {% endfor %}
+                {% if 'genes' in data[reactions] %}
+                    {% if proteins in data[reactions]['genes'].keys() %}
+                        {% for gene in data[reactions]['genes'][proteins] %}
+                            <p style="padding-left: 100px;">
+                                <span style="color:#4B8A08">Gene:</span>
+                                <a href="">{{ gene['name'] }}</a>
+                                <table style="padding: 0px 0px 0px 100px;">
+                                    <tr>
+                                        <td>{{ gene['sca'] }},</td>
+                                        <td>{{ gene['start'] }},</td>
+                                        <td>{{ gene['stop'] }},</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3">
+                                            {{ gene['desc']}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
             {% endfor %}
         {% endif %}
         {% if 'genes' in data[reactions] %}
             {% for proteins in data[reactions]['genes'] %}
-                <p style="text-indent:50px;">Protein: {{ proteins }}</p>
-                {% for gene in data[reactions]['genes'][proteins] %}
-                    <p style="text-indent:100px;">
-                        Gene: {{ gene['name'] }}, {{ gene['sca'] }},
-                            {{ gene['start'] }}, {{ gene['stop'] }},
-                            {{ gene['desc']}}
+                {% if proteins not in data[reactions]['pathway'].keys() %}
+                    <p style="text-indent:50px;">Protein:
+                        <a href="http://purl.uniprot.org/uniprot/{{ proteins }}">{{ proteins }}</a>
                     </p>
-                {% endfor %}
+                    {% for gene in data[reactions]['genes'][proteins] %}
+                        <p style="padding-left: 100px;">
+                            <span style="color:#4B8A08">Gene:</span>
+                            <a href="">{{ gene['name'] }}</a>
+                            <table style="padding-left: 100px;">
+                                <tr>
+                                    <td>{{ gene['sca'] }},</td>
+                                    <td>{{ gene['start'] }},</td>
+                                    <td>{{ gene['stop'] }},</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        {{ gene['desc']}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </p>
+                    {% endfor %}
+                {% endif %}
             {% endfor %}
         {% endif %}
     {% endfor %}
