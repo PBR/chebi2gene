@@ -225,7 +225,7 @@ def index():
     logic within.
     """
     print 'Chebi2gene %s -- %s -- %s\n' % (datetime.datetime.now(),
-        request.remote_addr, request.url))
+        request.remote_addr, request.url)
     form = ChebiIDForm(csrf_enabled=False)
     if form.validate_on_submit():
         return redirect(url_for('show_chebi', chebi_id=form.chebi_id.data))
@@ -240,7 +240,7 @@ def show_chebi(chebi_id = '17579'):
     logic within.
     """
     print 'Chebi2gene %s -- %s -- %s\n' % (datetime.datetime.now(),
-        request.remote_addr, request.url))
+        request.remote_addr, request.url)
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
     pathways = get_pathways_of_proteins(proteins)
@@ -253,7 +253,7 @@ def generate_csv(chebi_id):
     information.
     """
     print 'Chebi2gene %s -- %s -- %s\n' % (datetime.datetime.now(),
-        request.remote_addr, request.url))
+        request.remote_addr, request.url)
     # Regenerate the informations
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
