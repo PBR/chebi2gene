@@ -19,11 +19,11 @@
         <h1>Chebi2gene<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h1>
         <h2>Chebi: {{ chebi }}</h2>
         <p>
-            <a href="http://www.ebi.ac.uk/chebi/searchId.do?chebiId={{ chebi }}">Chebi page</a>
-        </p>
-        <p>
+            <a href="{{url_for('index')}}">Home</a> | 
+            <a href="http://www.ebi.ac.uk/chebi/searchId.do?chebiId={{ chebi }}">Chebi page</a> | 
             <a href="{{url_for('generate_csv', chebi_id=chebi)}}">Export as csv</a>
         </p>
+
     {% for reactions in data %}
         <p>Reaction:
             <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:{{ reactions }}">
