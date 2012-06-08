@@ -241,6 +241,10 @@ def show_chebi(chebi_id = '17579'):
     templates directory. The file is full html and has no templating
     logic within.
     """
+    stream = open('logs', 'a')
+    stream.write('%s -- %s -- %s\n' % (datetime.datetime.now(),
+        request.remote_addr, request.url))
+    stream.close()
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
     pathways = get_pathways_of_proteins(proteins)
@@ -252,6 +256,10 @@ def generate_csv(chebi_id):
     """ Generate a comma separated value file containing all the
     information.
     """
+    stream = open('logs', 'a')
+    stream.write('%s -- %s -- %s\n' % (datetime.datetime.now(),
+        request.remote_addr, request.url))
+    stream.close()
     # Regenerate the informations
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
