@@ -1,0 +1,55 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chebi2gene</title>
+    
+    <link rel="stylesheet" href="http://flask.pocoo.org/docs/_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="http://flask.pocoo.org/docs/_static/pygments.css" type="text/css" />
+  </head>
+  <body>
+    <div class="document">
+      <div class="section" id="intro">
+        <span id="id1"></span>
+        <h1>Chebi2gene<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h1>
+        <h2>Chebi: {{ chebi }}</h2>
+        <p>
+            <a href="http://www.ebi.ac.uk/chebi/searchId.do?chebiId={{ chebi }}">Chebi {{ chebi }} page</a>
+        </p>
+    {% for reactions in data %}
+        <p>Reaction: {{ reactions }}
+            <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:"></a>
+        </p>
+        {% set reactionloop = loop %}
+        {% if 'pathway' in data[reactions] %}
+            {% for proteins in data[reactions]['pathway'] %}
+                <p style="text-indent:50px;">Protein: {{ proteins }}</p>
+                {% for pathways in data[reactions]['pathway'][proteins] %}
+                    <p style="text-indent:100px;">
+                        Pathway: {{ pathways }}
+                    </p>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+        {% if 'genes' in data[reactions] %}
+            {% for proteins in data[reactions]['genes'] %}
+                <p style="text-indent:50px;">Protein: {{ proteins }}</p>
+                {% for gene in data[reactions]['genes'][proteins] %}
+                    <p style="text-indent:100px;">
+                        Gene: {{ gene['name'] }}, {{ gene['sca'] }},
+                            {{ gene['start'] }}, {{ gene['stop'] }},
+                            {{ gene['desc']}}
+                    </p>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>

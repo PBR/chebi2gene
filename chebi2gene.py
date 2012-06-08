@@ -241,7 +241,7 @@ def show_chebi(chebi_id = '17579'):
     proteins = convert_to_uniprot_uri(proteins)
     pathways = get_pathways_of_proteins(proteins)
     genes = get_genes_of_proteins(pathways)
-    return render_template('output.html', genes=genes)
+    return render_template('output.html', data=genes, chebi=chebi_id)
 
 
 if __name__ == '__main__':
