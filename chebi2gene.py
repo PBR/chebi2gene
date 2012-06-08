@@ -225,8 +225,6 @@ def index():
     """
     form = ChebiIDForm(csrf_enabled=False)
     if form.validate_on_submit():
-        print "Good work!"
-        print form.chebi_id.data
         return redirect(url_for('show_chebi', chebi_id=form.chebi_id.data))
     return render_template('index.html', form=form)
 
@@ -243,6 +241,40 @@ def show_chebi(chebi_id = '17579'):
     pathways = get_pathways_of_proteins(proteins)
     genes = get_genes_of_proteins(pathways)
     return render_template('output.html', data=genes, chebi=chebi_id)
+
+@APP.route('/csv/<chebi_id>')
+def generate_csv(chebi_id):
+    """ Generate a comma separated value file containing all the
+    information.
+    """
+    # Regenerate the informations
+    proteins = get_protein_of_chebi(chebi_id)
+    proteins = convert_to_uniprot_uri(proteins)
+    pathways = get_pathways_of_proteins(proteins)
+    data = get_genes_of_proteins(pathways)
+
+    stream = open('output.csv', 'w')
+    string = 'Chebi ID, Chebi URL, Rhea ID, Rhea URL, UniProt \
+    URL, Type, Name, Scaffold, Start, Stop, Description\n'
+    chebi_url = 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=%s' % \
+        chebi_id
+    for reactions in data:
+        react_url = 'http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:%s' % \
+            reactions
+        if 'pathway' in data[reactions]:
+            for proteins in data[reactions]['pathway']:
+                for pathways in data[reactions]['pathway'][proteins]:
+                    string = string + '%s,%s,%s,%s,%s,Pathway,%s\n' % (
+                        chebi_id, chebi_url, reactions, react_url, proteins,
+                        pathways)
+        if 'genes' in data[reactions]:
+            for proteins in data[reactions]['genes']:
+                for gene in data[reactions]['genes'][proteins]:
+                    string = string + '%s,%s,%s,%s,%s,Gene,%s,%s,%s,%s,%s\n' % (
+                        chebi_id, chebi_url, reactions, react_url, proteins,
+                        gene['name'], gene['sca'],
+                        gene['start'], gene['stop'], gene['desc'])
+    return Response(string, mimetype='application/excel')
 
 
 if __name__ == '__main__':
