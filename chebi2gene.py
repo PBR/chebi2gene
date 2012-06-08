@@ -256,7 +256,7 @@ def generate_csv(chebi_id):
     """ Generate a comma separated value file containing all the
     information.
     """
-    stream = open('logs', 'a')
+    stream = open('/tmp/chebi2gene', 'a')
     stream.write('%s -- %s -- %s\n' % (datetime.datetime.now(),
         request.remote_addr, request.url))
     stream.close()
