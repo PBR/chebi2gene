@@ -52,8 +52,7 @@ def convert_to_uniprot_uri(data):
         proteins2 = []
         for protein in proteins:
             prot_id = protein.rsplit(':', 1)[1]
-            proteins2.append('http://purl.uniprot.org/uniprot/%s' % (
-                prot_id))
+            proteins2.append(prot_id.strip())
         data[key] = proteins2
     return data
 
@@ -68,30 +67,32 @@ def get_genes_of_proteins(data):
         query = '''
         PREFIX gene:<http://pbr.wur.nl/GENE#> 
         PREFIX pos:<http://pbr.wur.nl/POSITION#> 
-        SELECT DISTINCT ?prot ?name ?sca ?start ?stop ?desc 
-        FROM <http://itag2.pbr.wur.nl/> 
+        SELECT DISTINCT ?prot ?name ?sca ?start ?stop ?desc
+        FROM <http://itag2.pbr.wur.nl/>
         WHERE{
-            ?gene gene:Protein ?prot . 
+            ?gene gene:Protein ?prot .
                 FILTER (
                 ?prot IN (
-<%s>
+<http://purl.uniprot.org/uniprot/%s>
                 )
             )
-            ?gene gene:Position ?pos . 
-            ?pos pos:Scaffold ?sca . 
-            ?gene gene:Description ?desc . 
-            ?gene gene:FeatureName ?name . 
-            ?pos pos:Start ?start . 
-            ?pos pos:Stop ?stop . 
-        }''' % ('>,\n<'.join(proteins))
+            ?gene gene:Position ?pos .
+            ?pos pos:Scaffold ?sca .
+            ?gene gene:Description ?desc .
+            ?gene gene:FeatureName ?name .
+            ?pos pos:Start ?start .
+            ?pos pos:Stop ?stop .
+        }
+        ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
         data_js = sparqlQuery(query, SERVER)
         genes = {}
         for entry in data_js['results']['bindings']:
-            prot_id = entry['prot']['value']
+            prot_id = entry['prot']['value'].rsplit('/', 1)[1]
             gene = {}
             for var in ['name', 'sca', 'start', 'stop', 'desc']:
                 gene[var] = entry[var]['value']
 
+            gene['sca'] = gene['sca'].rsplit('#', 1)[1]
             if prot_id in genes:
                 genes[prot_id].append(gene)
             else:
@@ -124,15 +125,15 @@ def get_pathways_of_proteins(data):
             ?annot rdfs:comment ?desc .
             FILTER (
                 ?prot IN (
-<%s>
+<http://purl.uniprot.org/uniprot/%s>
                 )
             )
         }
-        ''' % ('>,\n<'.join(proteins))
+        ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
         data_js = sparqlQuery(query, SERVER)
         prot = {}
         for entry in data_js['results']['bindings']:
-            prot_id = entry['prot']['value']
+            prot_id = entry['prot']['value'].rsplit('/', 1)[1]
             if prot_id in prot:
                 prot[prot_id].append(entry['desc']['value'])
             else:
@@ -164,7 +165,7 @@ def get_protein_of_chebi(chebi_id):
     data = sparqlQuery(query, SERVER)
     output = {}
     for entry in data['results']['bindings']:
-        key = entry['react']['value']
+        key = entry['react']['value'].split('#')[1]
         if key in output:
             output[key].append(entry['xref']['value'])
         else:
