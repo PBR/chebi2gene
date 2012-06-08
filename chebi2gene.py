@@ -224,7 +224,7 @@ def index():
     templates directory. The file is full html and has no templating
     logic within.
     """
-    print 'Chebi2gene %s -- %s -- %s\n' % (datetime.datetime.now(),
+    print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
         request.remote_addr, request.url)
     form = ChebiIDForm(csrf_enabled=False)
     if form.validate_on_submit():
@@ -239,7 +239,7 @@ def show_chebi(chebi_id = '17579'):
     templates directory. The file is full html and has no templating
     logic within.
     """
-    print 'Chebi2gene %s -- %s -- %s\n' % (datetime.datetime.now(),
+    print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
         request.remote_addr, request.url)
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
@@ -252,7 +252,7 @@ def generate_csv(chebi_id):
     """ Generate a comma separated value file containing all the
     information.
     """
-    print 'Chebi2gene %s -- %s -- %s\n' % (datetime.datetime.now(),
+    print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
         request.remote_addr, request.url)
     # Regenerate the informations
     proteins = get_protein_of_chebi(chebi_id)
