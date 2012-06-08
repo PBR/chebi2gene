@@ -253,7 +253,6 @@ def generate_csv(chebi_id):
     pathways = get_pathways_of_proteins(proteins)
     data = get_genes_of_proteins(pathways)
 
-    stream = open('output.csv', 'w')
     string = 'Chebi ID, Chebi URL, Rhea ID, Rhea URL, UniProt \
     URL, Type, Name, Scaffold, Start, Stop, Description\n'
     chebi_url = 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=%s' % \
