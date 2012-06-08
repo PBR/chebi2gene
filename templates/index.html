@@ -1,0 +1,47 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chebi2gene</title>
+    
+    <link rel="stylesheet" href="http://flask.pocoo.org/docs/_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="http://flask.pocoo.org/docs/_static/pygments.css" type="text/css" />
+  </head>
+  <body>
+    <div class="document">
+      <div class="section" id="intro">
+        <span id="id1"></span>
+        <h1>Chebi2gene<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h1>
+        <p>
+          The goal of this tool is to provide an easy way to link a specified molecule to the
+          Tomato genome.
+        </p>
+        <p>
+          For any given <a href="">CHEBI</a> identifier, it will look up the 
+          <a href="">Rhea</a> database. It will search all the reactions in
+          which this molecule is involved. Find all the protein involved in
+          these reactions as well and retrieve the pathway of these protein
+          as well as the gene from the Tomato genome linked to them.
+        </p>
+
+        <form method="POST" action="">
+          {{ form.chebi_id.label }} {{ form.chebi_id(size=20) }}
+          <input type="submit" value="Submit">
+        </form>
+
+        <p>
+            Example: Search for CHEBI
+            <a href="{{url_for('show_chebi', chebi_id='17579')}}">
+                17579
+            </a>
+             ie: Beta-carotene
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
