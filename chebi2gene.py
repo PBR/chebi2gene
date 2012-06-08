@@ -82,7 +82,7 @@ def get_genes_of_proteins(data):
             ?gene gene:FeatureName ?name .
             ?pos pos:Start ?start .
             ?pos pos:Stop ?stop .
-        }
+        } ORDER BY ?name
         ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
         data_js = sparqlQuery(query, SERVER)
         genes = {}
