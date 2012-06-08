@@ -10,6 +10,7 @@ information and return its RDF representation.
 from flask import Flask, Response, render_template, request, redirect, url_for
 from flaskext.wtf import Form, TextField, validators, Required
 
+import datetime
 import rdflib
 import urllib
 import json
@@ -223,6 +224,10 @@ def index():
     templates directory. The file is full html and has no templating
     logic within.
     """
+    stream = open('logs', 'a')
+    stream.write('%s -- %s -- %s\n' % (datetime.datetime.now(),
+        request.remote_addr, request.url))
+    stream.close()
     form = ChebiIDForm(csrf_enabled=False)
     if form.validate_on_submit():
         return redirect(url_for('show_chebi', chebi_id=form.chebi_id.data))
