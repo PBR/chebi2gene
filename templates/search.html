@@ -1,0 +1,80 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chebi2gene</title>
+    
+    <link rel="stylesheet" href="http://flask.pocoo.org/docs/_static/flasky.css" type="text/css" />
+    <link rel="stylesheet" href="http://flask.pocoo.org/docs/_static/pygments.css" type="text/css" />
+    <style type="text/css">
+    table td {
+      vertical-align:top;
+      border-top: 1px solid black;
+    }
+    table tr td,
+    table tr th {
+      border-left: 0;
+      border-right: 0;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="document">
+      <div class="section" id="intro">
+        <span id="id1"></span>
+        <h1>Chebi2gene<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h1>
+        <h2>Searching: &quot;{{ search }}&quot;</h2>
+        <p>
+            <a href="{{url_for('index')}}">Home</a>
+        </p>
+
+    {% if not extended %}
+      <p> 
+        <a href="{{url_for('search_chebi_extended', name=search)}}">
+          Extend search to synonyms
+        </a>
+      </p>
+    {% endif %}
+
+    {% if data %}
+      <table>
+        <tr>
+          <th>Identifier</th>
+          <th>Name</th>
+          <th>Synonym</th>
+          <th></th>
+        </tr>
+        {% for molecules in data %}
+          <tr>
+            <td> 
+              <a href="{{url_for('show_chebi', chebi_id=molecules)}}">
+                {{ molecules }}
+              </a>
+            </td>
+            <td> {{ data[molecules]['name'][0] }} </td>
+            <td>
+              {% for info in data[molecules]['syn'] %}
+              {{ info }} <br />
+              {% endfor %}
+            </td>
+            <td>
+              <a href="http://www.ebi.ac.uk/chebi/searchId.do?chebiId={{ molecules }}">Chebi</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+       
+    {% else %}
+        <p>
+            Sorry no results could be found for the compound &quot;{{ search }}&quot;.
+        </p>
+    {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

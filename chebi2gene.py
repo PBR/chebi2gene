@@ -41,7 +41,7 @@ graphs = {
 
 class ChebiIDForm(Form):
 
-    chebi_id = TextField('Chebi ID')
+    chebi_id = TextField('Chebi ID or molecule name')
 
 
 def convert_to_uniprot_uri(data):
@@ -57,6 +57,72 @@ def convert_to_uniprot_uri(data):
         data[key] = proteins2
     return data
 
+
+def get_exact_chebi_from_search(name):
+    """
+    """
+    query = '''
+    PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX obo:<http://purl.obolibrary.org/obo#>
+    SELECT DISTINCT ?id ?name ?syn
+    FROM <http://chebi.pbr.wur.nl/>
+    WHERE {
+      {
+        ?id rdfs:label ?name .
+        ?id obo:Synonym ?syn .
+        FILTER (
+            regex(?name, "%(search)s", "i")
+        )
+      }
+    } ORDER BY ?id
+    ''' % {'search': name}
+    print query
+    data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
+    molecules = {}
+    for entry in data_js['results']['bindings']:
+        chebi_id = entry['id']['value'].rsplit('/', 1)[1].split('_')[1]
+        tmp = {}
+        for var in ['name', 'syn']:
+            if var in tmp:
+                tmp[var].append(entry[var]['value'])
+            else:
+                tmp[var] = [entry[var]['value']]
+        molecules[chebi_id] = tmp
+    return molecules
+
+
+def get_extended_chebi_from_search(name):
+    """
+    """
+    query = '''
+    PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX obo:<http://purl.obolibrary.org/obo#>
+    SELECT DISTINCT ?id ?name ?syn
+    FROM <http://chebi.pbr.wur.nl/>
+    WHERE {
+      {
+        ?id rdfs:label ?name .
+        ?id obo:Synonym ?syn .
+        FILTER (
+            regex(?name, "%(search)s", "i")
+            || regex(?syn, "%(search)s", "i")
+        )
+      }
+    } ORDER BY ?id
+    ''' % {'search': name}
+    data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
+    molecules = {}
+    for entry in data_js['results']['bindings']:
+        chebi_id = entry['id']['value'].rsplit('/', 1)[1].split('_')[1]
+        tmp = {}
+        for var in ['name', 'syn']:
+            if var in tmp:
+                tmp[var].append(entry[var]['value'])
+            else:
+                tmp[var] = [entry[var]['value']]
+        molecules[chebi_id] = tmp
+    return molecules
+    
 
 def get_genes_of_proteins(data):
     """
@@ -228,12 +294,41 @@ def index():
         request.remote_addr, request.url)
     form = ChebiIDForm(csrf_enabled=False)
     if form.validate_on_submit():
-        return redirect(url_for('show_chebi', chebi_id=form.chebi_id.data))
+        try:
+            int(form.chebi_id.data)
+            return redirect(url_for('show_chebi',
+                chebi_id=form.chebi_id.data))
+        except ValueError, er:
+            return redirect(url_for('search_chebi',
+                name=form.chebi_id.data))
     return render_template('index.html', form=form)
 
 
+@APP.route('/search/<name>')
+def search_chebi(name):
+    """ Search the CHEBI database for the name given.
+    """
+    print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
+        request.remote_addr, request.url)
+    molecules = get_exact_chebi_from_search(name)
+    return render_template('search.html', data=molecules, search=name,
+        extended=False)
+
+
+@APP.route('/fullsearch/<name>')
+def search_chebi_extended(name):
+    """ Search the CHEBI database for the name given including the
+    synonyms.
+    """
+    print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
+        request.remote_addr, request.url)
+    molecules = get_extended_chebi_from_search(name)
+    return render_template('search.html', data=molecules, search=name,
+        extended=True)
+
+
 @APP.route('/chebi/<chebi_id>')
-def show_chebi(chebi_id = '17579'):
+def show_chebi(chebi_id):
     """ Shows the front page.
     All the content of this page is in the index.html file under the
     templates directory. The file is full html and has no templating
