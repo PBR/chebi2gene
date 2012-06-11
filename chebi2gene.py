@@ -76,18 +76,16 @@ def get_exact_chebi_from_search(name):
       }
     } ORDER BY ?id
     ''' % {'search': name}
-    print query
     data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
     molecules = {}
     for entry in data_js['results']['bindings']:
         chebi_id = entry['id']['value'].rsplit('/', 1)[1].split('_')[1]
-        tmp = {}
-        for var in ['name', 'syn']:
-            if var in tmp:
-                tmp[var].append(entry[var]['value'])
-            else:
-                tmp[var] = [entry[var]['value']]
-        molecules[chebi_id] = tmp
+        if chebi_id in molecules:
+            molecules[chebi_id]['syn'].append(entry['syn']['value'])
+        else:
+            molecules[chebi_id] = { 'name' : [entry['name']['value']],
+                                    'syn' : [entry['syn']['value']]
+                                  }
     return molecules
 
 
@@ -114,13 +112,12 @@ def get_extended_chebi_from_search(name):
     molecules = {}
     for entry in data_js['results']['bindings']:
         chebi_id = entry['id']['value'].rsplit('/', 1)[1].split('_')[1]
-        tmp = {}
-        for var in ['name', 'syn']:
-            if var in tmp:
-                tmp[var].append(entry[var]['value'])
-            else:
-                tmp[var] = [entry[var]['value']]
-        molecules[chebi_id] = tmp
+        if chebi_id in molecules:
+            molecules[chebi_id]['syn'].append(entry['syn']['value'])
+        else:
+            molecules[chebi_id] = { 'name' : [entry['name']['value']],
+                                    'syn' : [entry['syn']['value']]
+                                  }
     return molecules
     
 
@@ -311,6 +308,9 @@ def search_chebi(name):
     print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
         request.remote_addr, request.url)
     molecules = get_exact_chebi_from_search(name)
+    if len(molecules) == 1:
+        return redirect(url_for('show_chebi',
+                chebi_id=molecules.keys()[0]))
     return render_template('search.html', data=molecules, search=name,
         extended=False)
 

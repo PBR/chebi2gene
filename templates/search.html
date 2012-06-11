@@ -59,7 +59,7 @@
             <td> {{ data[molecules]['name'][0] }} </td>
             <td>
               {% for info in data[molecules]['syn'] %}
-              {{ info }} <br />
+                {{ info }} <br />
               {% endfor %}
             </td>
             <td>
@@ -68,6 +68,9 @@
           </tr>
         {% endfor %}
       </table>
+      <p>
+        {{data |length}} results found
+      </p>
        
     {% else %}
         <p>
