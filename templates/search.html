@@ -44,6 +44,15 @@
         </a>
     </p>
 
+    <p>
+      Several molecules contained &quot;{{ search }}&quot; in their
+      {% if not extended %}
+        name
+      {% else %}
+        name or synonyms,
+      {% endif %}
+      choose the molecule of interest.
+    </p>
     {% if data %}
       <table>
         <tr>
