@@ -33,13 +33,16 @@
             <a href="{{url_for('index')}}">Home</a>
         </p>
 
-    {% if not extended %}
-      <p> 
+    <p>
+      {% if not extended %}
         <a href="{{url_for('search_chebi_extended', name=search)}}">
           Extend search to synonyms
+      {% else %}
+        <a href="{{url_for('search_chebi', name=search)}}">
+          Reduce the search to names only
+      {% endif %}
         </a>
-      </p>
-    {% endif %}
+    </p>
 
     {% if data %}
       <table>
@@ -59,7 +62,7 @@
             <td> {{ data[molecules]['name'][0] }} </td>
             <td>
               {% for info in data[molecules]['syn'] %}
-                {{ info }} <br />
+                • {{ info }} <br />
               {% endfor %}
             </td>
             <td>
