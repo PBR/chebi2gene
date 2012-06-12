@@ -342,6 +342,7 @@ def show_chebi(chebi_id):
     genes = get_genes_of_proteins(pathways)
     return render_template('output.html', data=genes, chebi=chebi_id)
 
+
 @APP.route('/csv/<chebi_id>')
 def generate_csv(chebi_id):
     """ Generate a comma separated value file containing all the
