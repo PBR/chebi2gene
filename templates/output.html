@@ -24,6 +24,13 @@
             <a href="{{url_for('generate_csv', chebi_id=chebi)}}">Export as csv</a>
         </p>
 
+    {% if proteins %}
+    <ul>
+        <li>{{ proteins|length }} reactions found</li>
+        <li>{{ pathways|length }} proteins involved</li>
+    </ul>
+    {% endif %}
+
     {% for reaction in proteins %}
         <p>Reaction:
             <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:{{ reactions }}">
@@ -34,11 +41,7 @@
         {% for protein in proteins[reaction] %}
             <p style="text-indent:50px;">Protein:
                 <a href="http://purl.uniprot.org/uniprot/{{ proteins }}">{{ protein }}</a>
-                (
-                {% for orga in organisms[protein] %}
-                    {{ orga }}
-                {% endfor %}
-                )
+                ({{ organisms[protein]|join(', ')}})
             </p>
             {% for pathways in pathways[protein] %}
                 <p style="text-indent:100px;">
@@ -67,7 +70,6 @@
                 </p>
             {% endfor %}
         {% endfor %}
-
     {% else %}
         <p>
             Sorry no results could be found for this compound.
