@@ -124,8 +124,9 @@ def get_extended_chebi_from_search(name):
 def get_genes_of_proteins(data):
     """
     """
+    genes = {}
     for key in data:
-        proteins = data[key]['pathway']
+        proteins = data[key]
         # Let's make sure the identifiers are unique
         proteins = list(set(proteins))
         query = '''
@@ -149,7 +150,6 @@ def get_genes_of_proteins(data):
         } ORDER BY ?name
         ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
         data_js = sparqlQuery(query, SERVER)
-        genes = {}
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
             gene = {}
@@ -162,17 +162,13 @@ def get_genes_of_proteins(data):
             else:
                 genes[prot_id] = [gene]
 
-        for protein in proteins:
-            if not protein in genes:
-                genes[protein] = []
-        data[key]['genes'] = genes
-    return data
+    return genes
 
 
 def get_pathways_of_proteins(data):
     """
     """
-    output = {}
+    pathways = {}
     for key in data:
         proteins = data[key]
         # Let's make sure the identifiers are unique
@@ -195,18 +191,48 @@ def get_pathways_of_proteins(data):
         }
         ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
         data_js = sparqlQuery(query, SERVER)
-        prot = {}
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
-            if prot_id in prot:
-                prot[prot_id].append(entry['desc']['value'])
+            path = entry['desc']['value']
+            if prot_id in pathways and path not in pathways[prot_id]:
+                pathways[prot_id].append(path)
             else:
-                prot[prot_id] = [entry['desc']['value']]
-        for protein in proteins:
-            if not protein in prot:
-                prot[protein] = []
-        output[key] = {'pathway': prot}
-    return output
+                pathways[prot_id] = [path]
+    return pathways
+
+
+def get_organism_of_proteins(data):
+    """
+    """
+    organism = {}
+    for key in data:
+        proteins = data[key]
+        # Let's make sure the identifiers are unique
+        proteins = list(set(proteins))
+        query = '''
+        PREFIX uniprot:<http://purl.uniprot.org/core/>
+        SELECT DISTINCT ?prot ?name
+        FROM <http://uniprot.pbr.wur.nl/>
+        WHERE {
+            ?prot uniprot:organism ?orga .
+            ?orga uniprot:scientificName ?name .
+            FILTER (
+                ?prot IN (
+<http://purl.uniprot.org/uniprot/%s>
+                )
+            )
+        }
+        ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
+        data_js = sparqlQuery(query, SERVER)
+        org_of_prot = {}
+        for entry in data_js['results']['bindings']:
+            prot_id = entry['prot']['value'].rsplit('/', 1)[1]
+            orga = entry['name']['value']
+            if prot_id in organism and orga not in organism[prot_id]:
+                organism[prot_id].append(orga)
+            else:
+                organism[prot_id] = [orga]
+    return organism
 
 
 def get_protein_of_chebi(chebi_id):
@@ -339,8 +365,11 @@ def show_chebi(chebi_id):
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
     pathways = get_pathways_of_proteins(proteins)
-    genes = get_genes_of_proteins(pathways)
-    return render_template('output.html', data=genes, chebi=chebi_id)
+    genes = get_genes_of_proteins(proteins)
+    organisms = get_organism_of_proteins(proteins)
+    return render_template('output.html', proteins=proteins,
+        pathways=pathways, genes=genes, organisms=organisms,
+        chebi=chebi_id)
 
 
 @APP.route('/csv/<chebi_id>')
@@ -354,26 +383,28 @@ def generate_csv(chebi_id):
     proteins = get_protein_of_chebi(chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
     pathways = get_pathways_of_proteins(proteins)
-    data = get_genes_of_proteins(pathways)
+    genes = get_genes_of_proteins(proteins)
+    organisms = get_organism_of_proteins(proteins)
 
-    string = 'Chebi ID, Chebi URL, Rhea ID, Rhea URL, UniProt \
-    URL, Type, Name, Scaffold, Start, Stop, Description\n'
+    string = 'Chebi ID, Chebi URL, Rhea ID, Rhea URL, UniProt, \
+Organism, Type, Name, Scaffold, Start, Stop, Description\n'
     chebi_url = 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=%s' % \
         chebi_id
-    for reactions in data:
+    for reaction in proteins:
         react_url = 'http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:%s' % \
-            reactions
-        if 'pathway' in data[reactions]:
-            for proteins in data[reactions]['pathway']:
-                for pathways in data[reactions]['pathway'][proteins]:
-                    string = string + '%s,%s,%s,%s,%s,Pathway,%s\n' % (
-                        chebi_id, chebi_url, reactions, react_url, proteins,
-                        pathways)
-        if 'genes' in data[reactions]:
-            for proteins in data[reactions]['genes']:
-                for gene in data[reactions]['genes'][proteins]:
-                    string = string + '%s,%s,%s,%s,%s,Gene,%s,%s,%s,%s,%s\n' % (
-                        chebi_id, chebi_url, reactions, react_url, proteins,
+            reaction
+        for protein in proteins[reaction]:
+            if protein in pathways:
+                for pathway in pathways[protein]:
+                    string = string + '%s,%s,%s,%s,%s,%s,Pathway,%s\n' % (
+                        chebi_id, chebi_url, reaction, react_url, protein,
+                        " - ",join(organisms[protein]),
+                        pathway)
+            if protein in genes:
+                for gene in genes[protein]:
+                    string = string + '%s,%s,%s,%s,%s,%s,Gene,%s,%s,%s,%s,%s\n' % (
+                        chebi_id, chebi_url, reaction, react_url, protein,
+                        " - ",join(organisms[protein]),
                         gene['name'], gene['sca'],
                         gene['start'], gene['stop'], gene['desc'])
     return Response(string, mimetype='application/excel')
