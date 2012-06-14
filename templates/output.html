@@ -41,7 +41,7 @@
         {% for protein in proteins[reaction] %}
             <p style="text-indent:50px;">Protein:
                 <a href="http://purl.uniprot.org/uniprot/{{ proteins }}">{{ protein }}</a>
-                ({{ organisms[protein]|join(', ')}})
+                (<span style="font-style:italic">{{ organisms[protein]|join(', ')}}</span>)
             </p>
             {% for pathways in pathways[protein] %}
                 <p style="text-indent:100px;">
