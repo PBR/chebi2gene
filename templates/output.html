@@ -33,14 +33,14 @@
 
     {% for reaction in proteins %}
         <p>Reaction:
-            <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:{{ reactions }}">
+            <a href="http://www.ebi.ac.uk/rhea/reaction.xhtml?id=RHEA:{{ reaction }}">
                 {{ reaction }}
             </a>
         </p>
         {% set reactionloop = loop %}
         {% for protein in proteins[reaction] %}
             <p style="text-indent:50px;">Protein:
-                <a href="http://purl.uniprot.org/uniprot/{{ proteins }}">{{ protein }}</a>
+                <a href="http://purl.uniprot.org/uniprot/{{ protein }}">{{ protein }}</a>
                 (<span style="font-style:italic">{{ organisms[protein]|join(', ')}}</span>)
             </p>
             {% for pathways in pathways[protein] %}
