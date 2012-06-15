@@ -8,7 +8,7 @@ information and return its RDF representation.
 """
 
 from flask import Flask, Response, render_template, request, redirect, url_for
-from flaskext.wtf import Form, TextField, validators, Required
+from flaskext.wtf import Form, TextField
 
 import datetime
 import rdflib
@@ -16,31 +16,27 @@ import urllib
 import json
 
 
-"""
-Address of the sparql server to query.
-"""
+# Address of the sparql server to query.
 SERVER = 'http://sparql.plantbreeding.nl:8080/sparql/'
-"""
-Turn on or off the debugging mode (turn on only for development).
-"""
+# Turn on or off the debugging mode (turn on only for development).
 DEBUG = True
-"""
-Create the application.
-"""
+# Create the application.
 APP = Flask(__name__)
-APP.secret_key = 'df;lkhad;fkl234jbcl90-=dasg789flin1234hc kh kkavjnk.djbgf-*iqgfb.vkjb34hrtq2'
+APP.secret_key = 'df;lkhad;fkl234jbcl90-=davjnk.djbgf-*iqgfb.vkjb34hrt' \
+'q2lkhflkjdhflkdjhbfakljgipfurp923243nmrlenr;k3jbt;kt'
 
-"""
-Stores in which graphs are the different source of information.
-"""
-graphs = {
+# Stores in which graphs are the different source of information.
+GRAPHS = {
     'uniprot' : 'http://uniprot.pbr.wur.nl/',
     'itag' : 'http://itag2.pbr.wur.nl/',
+    'chebi' : 'http://chebi.pbr.wur.nl/',
 }
 
 
 class ChebiIDForm(Form):
-
+    """ Simple text field form to input the chebi identifier or the
+    name of the protein.
+    """
     chebi_id = TextField('Chebi ID or molecule name')
 
 
@@ -78,7 +74,7 @@ def get_exact_chebi_from_search(name):
     PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
     PREFIX obo:<http://purl.obolibrary.org/obo#>
     SELECT DISTINCT ?id ?name ?syn
-    FROM <http://chebi.pbr.wur.nl/>
+    FROM <%(chebi)s>
     WHERE {
       {
         ?id rdfs:label ?name .
@@ -88,8 +84,8 @@ def get_exact_chebi_from_search(name):
         )
       }
     } ORDER BY ?id
-    ''' % {'search': name}
-    data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
+    ''' % {'search': name, 'chebi': GRAPHS['chebi']}
+    data_js = sparql_query(query, 'http://localhost:8890/sparql')
     if not data_js:
         return
     molecules = {}
@@ -121,7 +117,7 @@ def get_extended_chebi_from_search(name):
     PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
     PREFIX obo:<http://purl.obolibrary.org/obo#>
     SELECT DISTINCT ?id ?name ?syn
-    FROM <http://chebi.pbr.wur.nl/>
+    FROM <%(chebi)s>
     WHERE {
       {
         ?id rdfs:label ?name .
@@ -132,8 +128,8 @@ def get_extended_chebi_from_search(name):
         )
       }
     } ORDER BY ?id
-    ''' % {'search': name}
-    data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
+    ''' % {'search': name, 'chebi': GRAPHS['chebi']}
+    data_js = sparql_query(query, 'http://localhost:8890/sparql')
     if not data_js:
         return
     molecules = {}
@@ -165,15 +161,15 @@ def get_genes_of_proteins(data):
         # Let's make sure the identifiers are unique
         proteins = list(set(proteins))
         query = '''
-        PREFIX gene:<http://pbr.wur.nl/GENE#> 
-        PREFIX pos:<http://pbr.wur.nl/POSITION#> 
+        PREFIX gene:<http://pbr.wur.nl/GENE#>
+        PREFIX pos:<http://pbr.wur.nl/POSITION#>
         SELECT DISTINCT ?prot ?name ?sca ?start ?stop ?desc
-        FROM <http://itag2.pbr.wur.nl/>
+        FROM <%(itag)s>
         WHERE{
             ?gene gene:Protein ?prot .
                 FILTER (
                 ?prot IN (
-<http://purl.uniprot.org/uniprot/%s>
+<http://purl.uniprot.org/uniprot/%(prot)s>
                 )
             )
             ?gene gene:Position ?pos .
@@ -183,8 +179,9 @@ def get_genes_of_proteins(data):
             ?pos pos:Start ?start .
             ?pos pos:Stop ?stop .
         } ORDER BY ?name
-        ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
-        data_js = sparqlQuery(query, SERVER)
+        ''' % {'prot': '>,\n<http://purl.uniprot.org/uniprot/'.join(
+            proteins), 'itag': GRAPHS['itag']}
+        data_js = sparql_query(query, SERVER)
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
             gene = {}
@@ -221,19 +218,20 @@ def get_pathways_of_proteins(data):
         PREFIX uniprot:<http://purl.uniprot.org/core/>
         PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
         SELECT DISTINCT ?prot ?desc
-        FROM <http://uniprot.pbr.wur.nl/>
+        FROM <%(uniprot)s>
         WHERE {
             ?prot uniprot:annotation ?annot .
             ?annot rdfs:seeAlso ?url .
             ?annot rdfs:comment ?desc .
             FILTER (
                 ?prot IN (
-<http://purl.uniprot.org/uniprot/%s>
+<http://purl.uniprot.org/uniprot/%(prot)s>
                 )
             )
         }
-        ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
-        data_js = sparqlQuery(query, SERVER)
+        ''' % {'prot':'>,\n<http://purl.uniprot.org/uniprot/'.join(proteins),
+        'uniprot': GRAPHS['uniprot']}
+        data_js = sparql_query(query, SERVER)
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
             path = entry['desc']['value']
@@ -263,19 +261,19 @@ def get_organism_of_proteins(data):
         query = '''
         PREFIX uniprot:<http://purl.uniprot.org/core/>
         SELECT DISTINCT ?prot ?name
-        FROM <http://uniprot.pbr.wur.nl/>
+        FROM <%(uniprot)s>
         WHERE {
             ?prot uniprot:organism ?orga .
             ?orga uniprot:scientificName ?name .
             FILTER (
                 ?prot IN (
-<http://purl.uniprot.org/uniprot/%s>
+<http://purl.uniprot.org/uniprot/%(prot)s>
                 )
             )
         }
-        ''' % ('>,\n<http://purl.uniprot.org/uniprot/'.join(proteins))
-        data_js = sparqlQuery(query, SERVER)
-        org_of_prot = {}
+        ''' % {'prot':'>,\n<http://purl.uniprot.org/uniprot/'.join(proteins),
+        'uniprot': GRAPHS['uniprot']}
+        data_js = sparql_query(query, SERVER)
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
             orga = entry['name']['value']
@@ -299,9 +297,9 @@ def get_protein_of_chebi(chebi_id):
     query = '''
     prefix bp: <http://www.biopax.org/release/biopax-level2.owl#>
     SELECT DISTINCT ?react ?xref
-    FROM <http://rhea.pbr.wur.nl/>
+    FROM <%(chebi)>
     WHERE {
-      ?cmp bp:XREF <http://www.ebi.ac.uk/rhea#CHEBI:%s> .
+      ?cmp bp:XREF <http://www.ebi.ac.uk/rhea#CHEBI:%(chebi_id)s> .
       ?dir ?p ?cmp .
       ?react ?p2 ?dir .
       ?react bp:XREF ?xref .
@@ -309,8 +307,8 @@ def get_protein_of_chebi(chebi_id):
         regex(?xref, 'UNIPROT')
       )
     }
-    ''' % chebi_id
-    data = sparqlQuery(query, SERVER)
+    ''' % {'chebi_id': chebi_id, 'chebi': GRAPHS['chebi']}
+    data = sparql_query(query, SERVER)
     if not data:
         return
     output = {}
@@ -323,7 +321,7 @@ def get_protein_of_chebi(chebi_id):
     return output
 
 
-def sparqlQuery(query, server, format = 'application/json'):
+def sparql_query(query, server, output_format = 'application/json'):
     """ Runs the given SPARQL query against the desired sparql endpoint
     and return the output in the format asked (default being rdf/xml).
 
@@ -341,7 +339,7 @@ def sparqlQuery(query, server, format = 'application/json'):
         'query': query,
         'debug': 'off',
         'timeout': '',
-        'format': format,
+        'format': output_format,
         'save': 'display',
         'fname': ''
     }
@@ -369,7 +367,8 @@ def run_query_via_rdflib(query, server):
     @return, a string, representing the rdf output of the provided query.
     """
     graph = rdflib.Graph()
-    graph.parse(data=sparqlQuery(query, server), format="application/rdf+xml")
+    graph.parse(data=sparql_query(query, server),
+        output_format="application/rdf+xml")
     return graph.serialize(format='xml')
 
 
@@ -391,7 +390,7 @@ def index():
             int(form.chebi_id.data)
             return redirect(url_for('show_chebi',
                 chebi_id=form.chebi_id.data))
-        except ValueError, er:
+        except ValueError:
             return redirect(url_for('search_chebi',
                 name=form.chebi_id.data))
     return render_template('index.html', form=form)
@@ -471,13 +470,14 @@ Organism, Type, Name, Scaffold, Start, Stop, Description\n'
                 for pathway in pathways[protein]:
                     string = string + '%s,%s,%s,%s,%s,%s,Pathway,%s\n' % (
                         chebi_id, chebi_url, reaction, react_url, protein,
-                        " - ",join(organisms[protein]),
+                        " - ".join(organisms[protein]),
                         pathway)
             if protein in genes:
                 for gene in genes[protein]:
-                    string = string + '%s,%s,%s,%s,%s,%s,Gene,%s,%s,%s,%s,%s\n' % (
+                    string = string + \
+                    '%s,%s,%s,%s,%s,%s,Gene,%s,%s,%s,%s,%s\n' % (
                         chebi_id, chebi_url, reaction, react_url, protein,
-                        " - ",join(organisms[protein]),
+                        " - ".join(organisms[protein]),
                         gene['name'], gene['sca'],
                         gene['start'], gene['stop'], gene['desc'])
     return Response(string, mimetype='application/excel')
