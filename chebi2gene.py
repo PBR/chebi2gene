@@ -44,9 +44,13 @@ class ChebiIDForm(Form):
     chebi_id = TextField('Chebi ID or molecule name')
 
 
-def convert_to_uniprot_uri(data):
-    """
-    
+def convert_to_uniprot_id(data):
+    """ Converts from RHEA Uniprot URI to Uniprot ID.
+
+    @param data, a dictionary of String: [String] where the keys are
+    reaction ID and the values are protein URI.
+    @return, a dictionary of String: [String] where the keys are
+    reaction ID and the values are protein ID.
     """
     for key in data:
         proteins = data[key]
@@ -59,7 +63,16 @@ def convert_to_uniprot_uri(data):
 
 
 def get_exact_chebi_from_search(name):
-    """
+    """ Search the chebi database for molecule having the given string
+    in their name. The data returned contains the chebi identifier, the
+    name and synonyms of the molecule in chebi.
+
+    @param name, a string, name of the molecule to search in chebi.
+    @return, a dictionary containing all the molecule found for having
+    the input string in their name. The data structure returned is like:
+    {string: {'name': string, 'syn': [String]}}, where the keys are the
+    chebi identifier and the values are dictionaries containing the
+    name of the molecules and a list of its synonym.
     """
     query = '''
     PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
@@ -92,7 +105,17 @@ def get_exact_chebi_from_search(name):
 
 
 def get_extended_chebi_from_search(name):
-    """
+    """ Search the chebi database for molecule having the given string
+    in their name or in their synonyms. The data returned contains the
+    chebi identifier, the name and synonyms of the molecule in chebi.
+
+    @param name, a string, name of the molecule to search in chebi.
+    @return, a dictionary containing all the molecule found for having
+    the input string in their name or in their synonyms.
+    The data structure returned is like:
+    {string: {'name': string, 'syn': [String]}}, where the keys are the
+    chebi identifier and the values are dictionaries containing the
+    name of the molecules and a list of its synonym.
     """
     query = '''
     PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
@@ -126,7 +149,15 @@ def get_extended_chebi_from_search(name):
     
 
 def get_genes_of_proteins(data):
-    """
+    """ Returns the genes associated with proteins.
+
+    @param name, a dictionary where the keys are reactions identifier
+    and the values lists of proteins.
+    @return, a dictionary containing all the genes related with the
+    proteins specified.
+    The data structure returned is like:
+    {string: [String]}, where the keys are the uniprot identifier and
+    the values are list of gene identifier associated with the protein.
     """
     genes = {}
     for key in data:
@@ -170,7 +201,15 @@ def get_genes_of_proteins(data):
 
 
 def get_pathways_of_proteins(data):
-    """
+    """ Returns the pathways associated with proteins.
+
+    @param name, a dictionary where the keys are reactions identifier
+    and the values lists of proteins.
+    @return, a dictionary containing all the pathways related with the
+    proteins specified.
+    The data structure returned is like:
+    {string: [String]}, where the keys are the uniprot identifier and
+    the values are list of pathways associated with the protein.
     """
     pathways = {}
     for key in data:
@@ -206,7 +245,15 @@ def get_pathways_of_proteins(data):
 
 
 def get_organism_of_proteins(data):
-    """
+    """ Returns the all organism associated with the proteins.
+
+    @param name, a dictionary where the keys are reactions identifier
+    and the values lists of proteins.
+    @return, a dictionary containing all the organism related with the
+    proteins specified.
+    The data structure returned is like:
+    {string: [String]}, where the keys are the uniprot identifier and
+    the values are list of organisms associated with the protein.
     """
     organism = {}
     for key in data:
@@ -240,7 +287,14 @@ def get_organism_of_proteins(data):
 
 
 def get_protein_of_chebi(chebi_id):
-    """
+    """ Returns the all protein associated with a compound.
+
+    @param name, a string, identifier of a compound on chebi.
+    @return, a dictionary containing all the proteins related with the
+    compound specified.
+    The data structure returned is like:
+    {string: [String]}, where the keys are reaction identifiers and the
+    values are list of proteins associated with the reaction.
     """
     query = '''
     prefix bp: <http://www.biopax.org/release/biopax-level2.owl#>
@@ -273,11 +327,13 @@ def sparqlQuery(query, server, format = 'application/json'):
     """ Runs the given SPARQL query against the desired sparql endpoint
     and return the output in the format asked (default being rdf/xml).
 
-    :param query, the string of the sparql query that should be ran.
-    :param server, a string, the url of the sparql endpoint that we want
+    @param query, the string of the sparql query that should be ran.
+    @param server, a string, the url of the sparql endpoint that we want
     to run query against.
-    :param format, specifies in which format we want to have the output.
+    @param format, specifies in which format we want to have the output.
     Defaults to `application/json` but can also be `application/rdf+xml`.
+    @return, a JSON object, representing the output of the provided
+    sparql query.
     """
     params = {
         'default-graph': '',
@@ -307,13 +363,17 @@ def run_query_via_rdflib(query, server):
     From version 6.1.5 at least, this trick should not be needed
     anymore.
 
-    :param query, the string of the sparql query that should be ran.
-    :param server, a string, the url of the sparql endpoint that we want
+    @param query, the string of the sparql query that should be ran.
+    @param server, a string, the url of the sparql endpoint that we want
     to run query against.
+    @return, a string, representing the rdf output of the provided query.
     """
     graph = rdflib.Graph()
     graph.parse(data=sparqlQuery(query, server), format="application/rdf+xml")
     return graph.serialize(format='xml')
+
+
+##  Web-app
 
 
 @APP.route('/', methods=['GET', 'POST'])
@@ -376,7 +436,7 @@ def show_chebi(chebi_id):
     if not proteins:
         return render_template('output.html', proteins=[],
         pathways=None, genes=None, organisms=None, chebi=chebi_id)
-    proteins = convert_to_uniprot_uri(proteins)
+    proteins = convert_to_uniprot_id(proteins)
     pathways = get_pathways_of_proteins(proteins)
     genes = get_genes_of_proteins(proteins)
     organisms = get_organism_of_proteins(proteins)
@@ -394,7 +454,7 @@ def generate_csv(chebi_id):
         request.remote_addr, request.url)
     # Regenerate the informations
     proteins = get_protein_of_chebi(chebi_id)
-    proteins = convert_to_uniprot_uri(proteins)
+    proteins = convert_to_uniprot_id(proteins)
     pathways = get_pathways_of_proteins(proteins)
     genes = get_genes_of_proteins(proteins)
     organisms = get_organism_of_proteins(proteins)
