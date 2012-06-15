@@ -27,9 +27,9 @@ APP.secret_key = 'df;lkhad;fkl234jbcl90-=davjnk.djbgf-*iqgfb.vkjb34hrt' \
 
 # Stores in which graphs are the different source of information.
 GRAPHS = {
-    'uniprot' : 'http://uniprot.pbr.wur.nl/',
-    'itag' : 'http://itag2.pbr.wur.nl/',
-    'chebi' : 'http://chebi.pbr.wur.nl/',
+    'uniprot': 'http://uniprot.pbr.wur.nl/',
+    'itag': 'http://itag2.pbr.wur.nl/',
+    'chebi': 'http://chebi.pbr.wur.nl/',
 }
 
 
@@ -94,8 +94,9 @@ def get_exact_chebi_from_search(name):
         if chebi_id in molecules:
             molecules[chebi_id]['syn'].append(entry['syn']['value'])
         else:
-            molecules[chebi_id] = { 'name' : [entry['name']['value']],
-                                    'syn' : [entry['syn']['value']]
+            molecules[chebi_id] = {
+                                    'name': [entry['name']['value']],
+                                    'syn': [entry['syn']['value']]
                                   }
     return molecules
 
@@ -138,11 +139,12 @@ def get_extended_chebi_from_search(name):
         if chebi_id in molecules:
             molecules[chebi_id]['syn'].append(entry['syn']['value'])
         else:
-            molecules[chebi_id] = { 'name' : [entry['name']['value']],
-                                    'syn' : [entry['syn']['value']]
+            molecules[chebi_id] = {
+                                    'name': [entry['name']['value']],
+                                    'syn': [entry['syn']['value']]
                                   }
     return molecules
-    
+
 
 def get_genes_of_proteins(data):
     """ Returns the genes associated with proteins.
@@ -229,8 +231,9 @@ def get_pathways_of_proteins(data):
                 )
             )
         }
-        ''' % {'prot':'>,\n<http://purl.uniprot.org/uniprot/'.join(proteins),
-        'uniprot': GRAPHS['uniprot']}
+        ''' % {'prot':
+        '>,\n<http://purl.uniprot.org/uniprot/'.join(proteins),
+                'uniprot': GRAPHS['uniprot']}
         data_js = sparql_query(query, SERVER)
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
@@ -271,8 +274,9 @@ def get_organism_of_proteins(data):
                 )
             )
         }
-        ''' % {'prot':'>,\n<http://purl.uniprot.org/uniprot/'.join(proteins),
-        'uniprot': GRAPHS['uniprot']}
+        ''' % {'prot':
+            '>,\n<http://purl.uniprot.org/uniprot/'.join(proteins),
+                'uniprot': GRAPHS['uniprot']}
         data_js = sparql_query(query, SERVER)
         for entry in data_js['results']['bindings']:
             prot_id = entry['prot']['value'].rsplit('/', 1)[1]
@@ -321,7 +325,7 @@ def get_protein_of_chebi(chebi_id):
     return output
 
 
-def sparql_query(query, server, output_format = 'application/json'):
+def sparql_query(query, server, output_format='application/json'):
     """ Runs the given SPARQL query against the desired sparql endpoint
     and return the output in the format asked (default being rdf/xml).
 
