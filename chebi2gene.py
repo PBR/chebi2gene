@@ -77,6 +77,8 @@ def get_exact_chebi_from_search(name):
     } ORDER BY ?id
     ''' % {'search': name}
     data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
+    if not data_js:
+        return
     molecules = {}
     for entry in data_js['results']['bindings']:
         chebi_id = entry['id']['value'].rsplit('/', 1)[1].split('_')[1]
@@ -109,6 +111,8 @@ def get_extended_chebi_from_search(name):
     } ORDER BY ?id
     ''' % {'search': name}
     data_js = sparqlQuery(query, 'http://localhost:8890/sparql')
+    if not data_js:
+        return
     molecules = {}
     for entry in data_js['results']['bindings']:
         chebi_id = entry['id']['value'].rsplit('/', 1)[1].split('_')[1]
@@ -253,6 +257,8 @@ def get_protein_of_chebi(chebi_id):
     }
     ''' % chebi_id
     data = sparqlQuery(query, SERVER)
+    if not data:
+        return
     output = {}
     for entry in data['results']['bindings']:
         key = entry['react']['value'].split('#')[1]
@@ -285,7 +291,11 @@ def sparqlQuery(query, server, format = 'application/json'):
     }
     querypart = urllib.urlencode(params)
     response = urllib.urlopen(server, querypart).read()
-    return json.loads(response)
+    try:
+        output = json.loads(response)
+    except ValueError:
+        output = {}
+    return output
 
 
 def run_query_via_rdflib(query, server):
@@ -334,7 +344,7 @@ def search_chebi(name):
     print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
         request.remote_addr, request.url)
     molecules = get_exact_chebi_from_search(name)
-    if len(molecules) == 1:
+    if molecules and len(molecules) == 1:
         return redirect(url_for('show_chebi',
                 chebi_id=molecules.keys()[0]))
     return render_template('search.html', data=molecules, search=name,
@@ -363,6 +373,9 @@ def show_chebi(chebi_id):
     print 'Chebi2gene %s -- %s -- %s' % (datetime.datetime.now(),
         request.remote_addr, request.url)
     proteins = get_protein_of_chebi(chebi_id)
+    if not proteins:
+        return render_template('output.html', proteins=[],
+        pathways=None, genes=None, organisms=None, chebi=chebi_id)
     proteins = convert_to_uniprot_uri(proteins)
     pathways = get_pathways_of_proteins(proteins)
     genes = get_genes_of_proteins(proteins)
