@@ -154,7 +154,7 @@ def get_genes_of_proteins(data):
     """ Returns the genes associated with proteins.
 
     @param name, a dictionary where the keys are reactions identifier
-    and the values lists of proteins.
+    and the values lists of proteins identifier.
     @return, a dictionary containing all the genes related with the
     proteins specified.
     The data structure returned is like:
