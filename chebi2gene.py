@@ -1,10 +1,13 @@
 #!/usr/bin/python
 
 """
-Small RDF API for the ITAG annotation.
+Small web application to retrieve information from uniprot and itag for
+a given compound.
 
-We keep the logic simple by querying the sparql endpoint for the desired
-information and return its RDF representation.
+The idea is that for one compound we are able to find out in which
+reactions it is involved and what are the proteins involved in these
+reactions. For each of these proteins we can find if there are genes and
+genes from tomato associated with them.
 """
 
 from flask import Flask, Response, render_template, request, redirect, url_for
