@@ -89,7 +89,7 @@ def get_exact_chebi_from_search(name):
       }
     } ORDER BY ?id
     ''' % {'search': name, 'chebi': GRAPHS['chebi']}
-    data_js = sparql_query(query, 'http://localhost:8890/sparql')
+    data_js = sparql_query(query, SERVER)
     if not data_js:
         return
     molecules = {}
@@ -134,7 +134,7 @@ def get_extended_chebi_from_search(name):
       }
     } ORDER BY ?id
     ''' % {'search': name, 'chebi': GRAPHS['chebi']}
-    data_js = sparql_query(query, 'http://localhost:8890/sparql')
+    data_js = sparql_query(query, SERVER)
     if not data_js:
         return
     molecules = {}
