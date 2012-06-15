@@ -30,6 +30,7 @@ GRAPHS = {
     'uniprot': 'http://uniprot.pbr.wur.nl/',
     'itag': 'http://itag2.pbr.wur.nl/',
     'chebi': 'http://chebi.pbr.wur.nl/',
+    'rhea': 'http://rhea.pbr.wur.nl/',
 }
 
 
@@ -301,7 +302,7 @@ def get_protein_of_chebi(chebi_id):
     query = '''
     prefix bp: <http://www.biopax.org/release/biopax-level2.owl#>
     SELECT DISTINCT ?react ?xref
-    FROM <%(chebi)>
+    FROM <%(rhea)s>
     WHERE {
       ?cmp bp:XREF <http://www.ebi.ac.uk/rhea#CHEBI:%(chebi_id)s> .
       ?dir ?p ?cmp .
@@ -311,7 +312,7 @@ def get_protein_of_chebi(chebi_id):
         regex(?xref, 'UNIPROT')
       )
     }
-    ''' % {'chebi_id': chebi_id, 'chebi': GRAPHS['chebi']}
+    ''' % {'chebi_id': chebi_id, 'rhea': GRAPHS['rhea']}
     data = sparql_query(query, SERVER)
     if not data:
         return
