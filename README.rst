@@ -23,7 +23,16 @@ This project is a `Flask`_ application, as such it depends on:
 - python-wtforms
 
 
-License
--------
+Deploying this project:
+-----------------------
+
+.. _Flask deployment documentation: http://flask.pocoo.org/docs/deploying/
+
+Instruction to deploy this application is available on the
+`Flask deployment documentation`_ page.
+
+
+License:
+--------
 
 This project is licensed under the new BSD license.
