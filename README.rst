@@ -18,9 +18,11 @@ Dependencies:
 .. _Flask: http://flask.pocoo.org/
 
 This project is a `Flask`_ application, as such it depends on:
+
 - python-flask
 - python-flask-wtf
 - python-wtforms
+- python-rdflib
 
 
 Deploying this project:
