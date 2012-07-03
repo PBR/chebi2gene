@@ -13,28 +13,28 @@ genes from tomato associated with them.
 from flask import Flask, Response, render_template, request, redirect, url_for
 from flaskext.wtf import Form, TextField
 
+import ConfigParser
 import datetime
+import os
 import rdflib
 import urllib
 import json
 
 
+CONFIG = ConfigParser.ConfigParser()
+CONFIG.readfp(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+    'chebi2gene.cfg')))
 # Address of the sparql server to query.
-SERVER = 'http://sparql.plantbreeding.nl:8080/sparql/'
-# Turn on or off the debugging mode (turn on only for development).
-DEBUG = True
+SERVER = CONFIG.get('chebi2gene', 'sparql_server')
+
 # Create the application.
 APP = Flask(__name__)
-APP.secret_key = 'df;lkhad;fkl234jbcl90-=davjnk.djbgf-*iqgfb.vkjb34hrt' \
-'q2lkhflkjdhflkdjhbfakljgipfurp923243nmrlenr;k3jbt;kt'
+APP.secret_key = CONFIG.get('chebi2gene', 'secret_key')
+
 
 # Stores in which graphs are the different source of information.
-GRAPHS = {
-    'uniprot': 'http://uniprot.pbr.wur.nl/',
-    'itag': 'http://itag2.pbr.wur.nl/',
-    'chebi': 'http://chebi.pbr.wur.nl/',
-    'rhea': 'http://rhea.pbr.wur.nl/',
-}
+GRAPHS = {option: CONFIG.get('graph', option) for option in CONFIG.options('graph')}
+print GRAPHS
 
 
 class ChebiIDForm(Form):
@@ -492,5 +492,5 @@ Organism, Type, Name, Scaffold, Start, Stop, Description\n'
 
 
 if __name__ == '__main__':
-    APP.debug = DEBUG
+    APP.debug = True
     APP.run()

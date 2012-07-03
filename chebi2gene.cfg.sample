@@ -1,0 +1,12 @@
+[chebi2gene]
+# Address of an accessible sparql endpoint
+sparql_server=http://a/sparql/endpoint
+# Secret key for the Flask application
+secret_key=<my own little secret which I shouldn't publish>
+
+[graph]
+# Key=name of the different graphs used by the sparql queries
+uniprot=http://uniprot.pbr.wur.nl/
+itag=http://itag2.pbr.wur.nl/
+chebi=http://chebi.pbr.wur.nl/
+rhea=http://rhea.pbr.wur.nl/
