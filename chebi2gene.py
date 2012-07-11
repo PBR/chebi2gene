@@ -15,10 +15,10 @@ from flaskext.wtf import Form, TextField
 
 import ConfigParser
 import datetime
+import json
 import os
 import rdflib
 import urllib
-import json
 
 
 CONFIG = ConfigParser.ConfigParser()
